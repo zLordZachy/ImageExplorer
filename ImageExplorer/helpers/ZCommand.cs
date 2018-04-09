@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace VektorovyEditor.helpers
+namespace ImageEditor.helpers
 {
     public class ZCommand : ICommand
     {

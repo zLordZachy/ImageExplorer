@@ -1,6 +1,6 @@
-﻿using VektorovyEditor.View;
+﻿using ImageEditor.View;
 
-namespace VektorovyEditor
+namespace ImageEditor
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

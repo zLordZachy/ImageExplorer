@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2011
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageExplorer", "VektorovyEditor\ImageExplorer.csproj", "{D0A59F5A-7E49-4C86-9E3E-91506A44859C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageExplorer", "ImageExplorer\ImageExplorer.csproj", "{D0A59F5A-7E49-4C86-9E3E-91506A44859C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

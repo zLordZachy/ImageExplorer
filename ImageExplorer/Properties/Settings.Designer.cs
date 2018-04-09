@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace VektorovyEditor.Properties
+namespace ImageEditor.Properties
 {
 
 

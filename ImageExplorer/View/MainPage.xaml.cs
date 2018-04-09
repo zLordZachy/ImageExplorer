@@ -1,7 +1,6 @@
-﻿using System.Windows.Controls;
-using VektorovyEditor.ViewModel;
+﻿using ImageEditor.ViewModel;
 
-namespace VektorovyEditor.View
+namespace ImageEditor.View
 {
     /// <summary>
     /// Interaction logic for MainPage.xaml

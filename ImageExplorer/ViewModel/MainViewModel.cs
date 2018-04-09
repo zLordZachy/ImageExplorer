@@ -7,11 +7,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using VektorovyEditor.Annotations;
-using VektorovyEditor.Elements;
-using VektorovyEditor.helpers;
+using ImageEditor.Elements;
+using ImageEditor.helpers;
+using ImageEditor.Properties;
 
-namespace VektorovyEditor.ViewModel
+namespace ImageEditor.ViewModel
 {
     public class MainViewModel : INotifyPropertyChanged
     {
@@ -129,17 +129,21 @@ namespace VektorovyEditor.ViewModel
         private void ListViewSiezeChange(object sender, SizeChangedEventArgs e)
         {
             double t = ListView.ActualWidth;
-            if (t <= 150)
+            if (t < 300)
             {
                 NumberOfColumns = 1;
             }
-            else if (t > 150 && t <= 400)
+            else if (t > 300 && t <= 450)
             {
                 NumberOfColumns = 2;
             }
-            else if (t > 400)
+            else if (t > 450 && t <= 500)
             {
                 NumberOfColumns = 3;
+            }
+            else
+            {
+                NumberOfColumns = 4;
             }
         }
 
