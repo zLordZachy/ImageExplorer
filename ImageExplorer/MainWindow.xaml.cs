@@ -1,4 +1,5 @@
-﻿using ImageEditor.View;
+﻿
+using MainPage = ImageExplorer.View.MainPage;
 
 namespace ImageEditor
 {

@@ -1,6 +1,6 @@
-﻿using ImageEditor.ViewModel;
+﻿using ImageExplorer.ViewModel;
 
-namespace ImageEditor.View
+namespace ImageExplorer.View
 {
     /// <summary>
     /// Interaction logic for MainPage.xaml
@@ -10,7 +10,7 @@ namespace ImageEditor.View
         public MainPage()
         {
             InitializeComponent();
-            DataContext = new MainViewModel(ListView);
+            DataContext = new MainViewModel(ListView, Page, Image,Border);
         }
     }
 }

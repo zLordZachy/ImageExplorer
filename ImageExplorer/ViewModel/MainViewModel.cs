@@ -1,17 +1,19 @@
-﻿using System;
+﻿using ImageEditor.Elements;
+using ImageEditor.helpers;
+using ImageEditor.Properties;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using ImageEditor.Elements;
-using ImageEditor.helpers;
-using ImageEditor.Properties;
 
-namespace ImageEditor.ViewModel
+namespace ImageExplorer.ViewModel
 {
     public class MainViewModel : INotifyPropertyChanged
     {
@@ -32,6 +34,18 @@ namespace ImageEditor.ViewModel
         private int _numberOfColumns;
         private PictureData _selectedPicture;
         private BitmapImage _mainImage;
+
+
+        private readonly Image _image;
+        private readonly Border _border;
+
+        private Point _origin;
+        private Point _start;
+        public Transform BaseTransform { get; set; }
+        public ScaleTransform Xform  { get; set; }
+
+
+        public TranslateTransform Tt { get; set; }
 
         public List<PictureData> ImageList2
         {
@@ -65,6 +79,8 @@ namespace ImageEditor.ViewModel
 
         public ListView ListView { get; set; }
 
+        private readonly Page _page;
+
         public BitmapImage MainImage
         {
             get => _mainImage;
@@ -84,6 +100,8 @@ namespace ImageEditor.ViewModel
                 _selectedPicture = value;
                 OnPropertyChanged(nameof(SelectedPicture));
                 SetMainImage();
+                RightTurnCommand.ChangeCanExecute();
+                LeftTurnCommand.ChangeCanExecute();
             }
         }
 
@@ -92,7 +110,8 @@ namespace ImageEditor.ViewModel
             BitmapImage image = new BitmapImage(new Uri(SelectedPicture.PicturePath));
             image.Rotation = Rotation.Rotate90;
             MainImage = image;
-         
+            _page.WindowTitle = SelectedPicture.Title;
+            ResetZoom();
         }
 
         public int NumberOfColumns
@@ -113,17 +132,107 @@ namespace ImageEditor.ViewModel
 
         public ZCommand LoadCommand { get; set; }
 
+        public ZCommand RightTurnCommand { get; set; }
+        public ZCommand LeftTurnCommand { get; set; }
+        public ZCommand Turn270Command { get; set; }
+        public ZCommand InfoCommand { get; set; }
 
-        public MainViewModel(ListView listView)
+
+
+        public MainViewModel(ListView listView, Page page, Image image, Border border)
         {
             ListView = listView;
+            _page = page;
+            _image = image;
+            _border = border;
             ListView.SizeChanged += ListViewSiezeChange;
             DeleteElementCommand = new ZCommand(CanDelete, Delet);
             LoadCommand = new ZCommand(CanAllow, Load);
+            RightTurnCommand = new ZCommand(CanTurn, Trun180);
+            LeftTurnCommand = new ZCommand(CanTurn, Trun90);
+            Turn270Command = new ZCommand(CanTurn, Trun270);
+            InfoCommand = new ZCommand(CanTurn, Info);
             ImageList = new List<ImageSource>();
             ImageList2 = new List<PictureData>();
+
+            InitRanderTransformation();
       
           LoadDefaultFolder(@"A:\fotky");
+        }
+
+        private void Info(object obj)
+        {
+            var x = MainImage.DpiX;
+            var y = MainImage.DpiY;
+
+         //   MainImage.
+
+
+        }
+
+        private void Trun90(object obj)
+        {
+            var buffer = File.ReadAllBytes(SelectedPicture.PicturePath);
+            MemoryStream ms = new MemoryStream(buffer);
+
+            BitmapImage src = new BitmapImage();
+            src.BeginInit();
+            src.StreamSource = ms;
+            src.Rotation = Rotation.Rotate90;
+            src.EndInit();
+
+            MainImage = src;
+        }
+
+        private bool CanTurn(object obj)
+        {
+            return MainImage != null;
+        }
+
+        private void Trun180(object obj)
+        {
+            var buffer = File.ReadAllBytes(SelectedPicture.PicturePath);
+            MemoryStream ms = new MemoryStream(buffer);
+
+            BitmapImage src = new BitmapImage();
+            src.BeginInit();
+            src.StreamSource = ms;
+            src.Rotation = Rotation.Rotate180;
+            src.EndInit();
+
+            MainImage = src;
+        }
+
+        private void Trun270(object obj)
+        {
+            var buffer = File.ReadAllBytes(SelectedPicture.PicturePath);
+            MemoryStream ms = new MemoryStream(buffer);
+
+            BitmapImage src = new BitmapImage();
+            src.BeginInit();
+            src.StreamSource = ms;
+            src.Rotation = Rotation.Rotate270;
+            src.EndInit();
+
+            MainImage = src;
+        }
+
+        private void InitRanderTransformation()
+        {
+            TransformGroup group = new TransformGroup();
+
+            ScaleTransform xform = new ScaleTransform();
+            group.Children.Add(xform);
+            Xform = xform;
+            TranslateTransform tt = new TranslateTransform();
+            Tt = tt;
+            group.Children.Add(tt);
+
+            _image.RenderTransform = group;
+            _image.MouseWheel += image_MouseWheel;
+            _image.MouseLeftButtonDown += image_MouseLeftButtonDown;
+            _image.MouseLeftButtonUp += image_MouseLeftButtonUp;
+            _image.MouseMove += image_MouseMove; 
         }
 
         private void ListViewSiezeChange(object sender, SizeChangedEventArgs e)
@@ -187,7 +296,7 @@ namespace ImageEditor.ViewModel
             return result == true ? dlg.FileName : null;
         }
 
-        private void loadDefult()
+        private void LoadDefult()
         {
             string path = @"C:\Users\zachovaltomas\Desktop\pavel.png";
             var uri = new Uri(path);
@@ -211,7 +320,7 @@ namespace ImageEditor.ViewModel
             {
                 if (file.Contains("jpeg") || file.Contains("png") || file.Contains("jpg"))
                 {
-                    var buffer = System.IO.File.ReadAllBytes(file);
+                    var buffer = File.ReadAllBytes(file);
                     MemoryStream ms = new MemoryStream(buffer);
 
                     BitmapImage src = new BitmapImage();
@@ -227,6 +336,59 @@ namespace ImageEditor.ViewModel
                 }
             }
         }
+
+        private void image_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            _image.ReleaseMouseCapture();
+        }
+
+        private void image_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_image.IsMouseCaptured) return;
+
+            var tt = (TranslateTransform)((TransformGroup)_image.RenderTransform).Children.First(tr => tr is TranslateTransform);
+            Vector v = _start - e.GetPosition(_border);
+            tt.X = _origin.X - v.X;
+            tt.Y = _origin.Y - v.Y;
+        }
+
+        private void image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount > 1)
+            {
+                ResetZoom();
+                return;
+            }
+            _image.CaptureMouse();
+            var tt = (TranslateTransform)((TransformGroup)_image.RenderTransform).Children.First(tr => tr is TranslateTransform);
+            _start = e.GetPosition(_border);
+            _origin = new Point(tt.X, tt.Y);
+        }
+
+        private void ResetZoom()
+        {
+            var ttt = (TranslateTransform)((TransformGroup)_image.RenderTransform).Children.First(tr => tr is TranslateTransform);
+            ttt.X = 0;
+            ttt.Y = 0;
+
+            TransformGroup transformGroup = (TransformGroup)_image.RenderTransform;
+            ScaleTransform transform = (ScaleTransform)transformGroup.Children[0];
+
+            transform.ScaleX = 1;
+            transform.ScaleY = 1;
+            return;
+        }
+
+        private void image_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            TransformGroup transformGroup = (TransformGroup)_image.RenderTransform;
+            ScaleTransform transform = (ScaleTransform)transformGroup.Children[0];
+
+            double zoom = e.Delta > 0 ? .2 : -.2;
+            transform.ScaleX += zoom;
+            transform.ScaleY += zoom;
+        }
+    
 
         public event PropertyChangedEventHandler PropertyChanged;
 
